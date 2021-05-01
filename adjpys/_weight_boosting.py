@@ -143,7 +143,10 @@ class BaseWeightBoosting(BaseEnsemble, metaclass=ABCMeta):
 
         # Clear any previous fit results
         self.auc=False
-        self.newfit=False
+        self.newfit = False
+        self.accfit = False
+        self.table = False 
+        self.accweight = False
         self.estimators_ = []
         self.estimator_weights_ = np.zeros(self.n_estimators, dtype=np.float64) # tree에 부가할 weight이고
         self.estimator_errors_ = np.ones(self.n_estimators, dtype=np.float64) # 에러담을 항
@@ -412,7 +415,7 @@ class AdaBoostClassifier(ClassifierMixin, BaseWeightBoosting):
     array([1])
     >>> clf.score(X, y)
     0.983...
-    """ #VV
+    """ 
     def __init__(self,
                  base_estimator=None,
                  n_estimators=50,
@@ -428,7 +431,7 @@ class AdaBoostClassifier(ClassifierMixin, BaseWeightBoosting):
 
         self.algorithm = algorithm
 
-    def fit(self, X, y, sample_weight=None,epochs=None):
+    def fit(self, X, y, sample_weight=None,epochs=100):
         """Build a boosted classifier from the training set (X, y).
 
         Parameters
@@ -454,6 +457,7 @@ class AdaBoostClassifier(ClassifierMixin, BaseWeightBoosting):
             raise ValueError("algorithm %s is not supported" % self.algorithm)
 
         # Fit
+        print(epochs)
         return super().fit(X, y, sample_weight,epochs)
 
     def _validate_estimator(self):
@@ -519,11 +523,11 @@ class AdaBoostClassifier(ClassifierMixin, BaseWeightBoosting):
             return self._boost_discrete(iboost, X, y, sample_weight,
                                         random_state,epochs)
 
-    def _boost_real(self, iboost, X, y, sample_weight, random_state,t_y,epochs=None): # t_y는 카테고리화 되지않은 것
+    def _boost_real(self, iboost, X, y, sample_weight, random_state,t_y,epoch): # t_y는 카테고리화 되지않은 것
         """Implement a single boost using the SAMME.R real algorithm."""
         estimator = self._make_estimator(random_state=random_state) # 여기가 복제로 만드는 곳 같음
         #print(iboost,"번째 estimator fit")
-        estimator.fit(X, y, sample_weight=sample_weight,epochs=epochs,verbose=0)
+        estimator.fit(X, y, sample_weight=sample_weight,epochs=epoch,verbose=0)
         # 만약에 여기서 loss ft을 바꾸게 되면 categorical을 못쓰게 됨.
 
         y_predict_proba = estimator.predict(X) #NN.softmax는 그냥하면 확률나옴
@@ -827,6 +831,8 @@ class AdaBoostClassifier(ClassifierMixin, BaseWeightBoosting):
                 #print(pred)
             elif self.auc: # VV auc weight
                 pred=sum(self.estimators_[i].predict(X)*self.aucw[i] for i in range(len(self.aucw)))
+            elif self.accfit:
+                pred=sum(self.estimators_[i].predict(X)*self.accweight for i in range(len(self.accweight))) # 정규화 된거를 받았다고 치는 거임            
             else :
                 pred=sum(estimator.predict(X) for estimator in self.estimators_)
                 pred /= len(self.estimator_weights_)
@@ -837,7 +843,7 @@ class AdaBoostClassifier(ClassifierMixin, BaseWeightBoosting):
                        for estimator, w in zip(self.estimators_,
                                                self.estimator_weights_))
 
-        
+        #print(pred) epochs낮아서 그런 듯
         return pred[:,1]
         if n_classes == 2:
             pred[:, 0] *= -1
