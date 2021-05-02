@@ -92,7 +92,6 @@ def makeexcel(clf,X_train,X_test,y_train,y_test):
         
 def geoacc(mat):
     value = (mat.iloc[0,0] / sum(mat.iloc[0,:])) * (mat.iloc[1,1] / sum(mat.iloc[1,:]))
-    print(value)
     return math.sqrt(value)
 
 def makeconma(conma,mat):
@@ -166,7 +165,6 @@ def oncefit(clf, xlsx, n_fold,epochs=1000):
             
             
             #학습 및 예측 
-            print(epochs)
             clf.fit(X_train , y_train,epochs = epochs)    
             if n_iter==1:
                 makeexcel(clf,X_train,X_test,y_train,y_test)
