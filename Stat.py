@@ -1,6 +1,10 @@
 import pandas as pd
 from scipy import stats
 
+
+import pandas as pd
+from scipy import stats
+
 # 간단한 클린징 작업 
 def setindex(dfs):
     for df in dfs:
@@ -41,17 +45,19 @@ def DoDivList(dfs):
         df.DivList()
     return dfs
 
-def PrintMannStat(leftlist, rightlist, Number, leftstr,rightstr):
+
+def PrintMannStat(leftlist, rightlist, Numbers, leftstr,rightstr):
+    FrameList = []
+    i = 0
     for l, r in zip(leftlist, rightlist):
-        Mann(l.acc,r.acc, Number ,leftstr, rightstr,"ACC")
-        Mann(l.auc,r.auc, Number ,leftstr, rightstr,"AUC")
-        Mann(l.geoacc,r.geoacc, Number ,leftstr, rightstr,"GEOACC")
-
-
-
-
-
-
-
-
+        Number = Numbers[i]
+        x_1,y_1 = Mann(l.acc,r.acc, Number ,leftstr, rightstr,"ACC")
+        x_2,y_2 = Mann(l.auc,r.auc, Number ,leftstr, rightstr,"AUC")
+        x_3,y_3 = Mann(l.geoacc,r.geoacc, Number ,leftstr, rightstr,"GEOACC")
+        now = pd.DataFrame([x_1,y_1,x_2,y_2,x_3,y_3], \
+                            index = [["ACC"]*2+["AUC"]*2+["GEOACC"]*2,["statistic","p-value"]*3] , \
+                            columns = [str(Number)])
+        FrameList.append(now)
+        i += 1
+    return pd.concat(FrameList,axis=1)
 

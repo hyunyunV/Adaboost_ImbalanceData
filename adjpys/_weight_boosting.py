@@ -457,7 +457,6 @@ class AdaBoostClassifier(ClassifierMixin, BaseWeightBoosting):
             raise ValueError("algorithm %s is not supported" % self.algorithm)
 
         # Fit
-        print(epochs)
         return super().fit(X, y, sample_weight,epochs)
 
     def _validate_estimator(self):

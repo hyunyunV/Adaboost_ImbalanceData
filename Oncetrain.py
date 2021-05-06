@@ -92,7 +92,6 @@ def makeexcel(clf,X_train,X_test,y_train,y_test):
         
 def geoacc(mat):
     value = (mat.iloc[0,0] / sum(mat.iloc[0,:])) * (mat.iloc[1,1] / sum(mat.iloc[1,:]))
-    print(value)
     return math.sqrt(value)
 
 def makeconma(conma,mat):
@@ -166,7 +165,6 @@ def oncefit(clf, xlsx, n_fold,epochs=1000):
             
             
             #학습 및 예측 
-            print(epochs)
             clf.fit(X_train , y_train,epochs = epochs)    
             if n_iter==1:
                 makeexcel(clf,X_train,X_test,y_train,y_test)
@@ -284,9 +282,11 @@ def valaccauc(datas):
         reslen = int((data.shape[1]) / 2)
         accs = np.array(data.iloc[4,1:reslen+1])
         aucs = np.array(data.iloc[4,reslen+1:data.shape[1]])
+        geoaccs = np.array(data.iloc[5,1:reslen+1])
+        
         print( '-' * 30 )
-        print(' acc_mean : %.2f \n acc_std : %.2f \n auc_mean : %.2f \n auc_std : %.2f ' 
-              % (np.mean(accs),np.std(accs), np.mean(aucs), np.std(aucs)) )
+        print(' acc_mean : %.2f \n acc_std : %.2f \n auc_mean : %.2f \n auc_std : %.2f \n geoacc_mean : %.2f \n geoacc_std : %.2f ' 
+              % (np.mean(accs),np.std(accs), np.mean(aucs), np.std(aucs), np.mean(geoaccs), np.std(geoaccs)) )
         print( '-' * 30 )    
 
 
