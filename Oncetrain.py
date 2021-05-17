@@ -60,11 +60,10 @@ def new_auc(y_test,pred):
     return (1+TPR-FPR)/2
 
 def Maketable(clf,X,y): # X = X_train, y = y_train
-    table = pd.DataFrame(np.array(y)) # 참고로 그냥 y하면 데이터프레임이라서 기업 인덱스가 존재함
+    table = pd.DataFrame(np.array(y)) # 그냥 y하면 데이터프레임이라서 기업 인덱스가 존재함
     for i, estimator in enumerate(clf.estimators_):
         ap = pd.DataFrame(estimator.predict(X), columns = ['0_'+str(i+1),'1_'+str(i+1)] ) # 이게 아마 넘파이 일거고
         table = pd.concat([table,ap],axis=1)
-
     return table 
 
 def Find_Optimal_Cutoff(target, predicted):
@@ -82,12 +81,12 @@ def makeexcel(clf,X_train,X_test,y_train,y_test):
         proba1 = clf.estimators_[i].predict(X_train)
         proba2 = clf.estimators_[i].predict(X_test)
         proba = pd.DataFrame(np.vstack((proba1,proba2)))
-        X = pd.concat([X_train,X_test])
-        y = pd.concat([X_train,X_test])
-        indexname = ['train']*(len(X)-500)+['test']*500
-        result = pd.concat([X,y,proba],axis=1)
+        X = pd.concat([X_train,X_test],ignore_index = True)
+        y = pd.concat([y_train,y_test],ignore_index = True)
+        indexname = ['train']*int((len(X)*(9/10)))+['test']*int(len(X)/10)
+        result = pd.concat([X,y,proba],axis=1,ignore_index = True)
         result.index = indexname
-        result.to_excel('estimators/first_fold_estimators'+str(i+1)+'.xlsx')        
+        result.to_excel('estimators/first_fold_estimators'+str(i+1)+'.xlsx')
         
         
 def geoacc(mat):
@@ -163,13 +162,11 @@ def oncefit(clf, xlsx, n_fold,epochs=1000):
             test_size = X_test.shape[0] # 이것도 나중에 없애도 댐 아래에 print 부분이랑 같이 날림 
             n_iter += 1
             
-            
             #학습 및 예측 
             clf.fit(X_train , y_train,epochs = epochs)    
             if n_iter==1:
                 makeexcel(clf,X_train,X_test,y_train,y_test)
             # 여기뭐 임계점 들어가야함 
-            
             
             # Default Fit 부분
             # 반복 시 마다 정확도 측정 
@@ -221,7 +218,7 @@ def oncefit(clf, xlsx, n_fold,epochs=1000):
             
             
             # 이 지점에서 ACC Fit 훈련이 시작 
-            clf.table = Maketable(clf,X_train, y_train) # 이거는 위에 만들어야함 이거 만들어서 경민이 주면 대겠지 ??
+            clf.table = Maketable(clf,X_train, y_train) 
             acccondition(clf)
             #clf.accweight = ACCfit(clf.table)  return  ACC_Weight_Vector
             #proba1 = clf.decision_function(X_train)
