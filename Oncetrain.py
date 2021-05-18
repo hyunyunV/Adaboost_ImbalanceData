@@ -136,12 +136,21 @@ def oncefit(clf, xlsx, n_fold,epochs=1000):
     conmaB=pd.DataFrame()
     global conmaC
     conmaC=pd.DataFrame()
+    global conmaD
+    conmaD=pd.DataFrame()
     cv_acc_def=[]
     cv_auc_def=[]
     cv_acc_auc=[]
+    
+    cv_acc_defp=[] # default에다가 point만 추가했다는 뜻
+    cv_auc_defp=[]
+    cv_acc_aucp=[]
+    
     cv_auc_auc=[]
     cv_acc_acc=[]
     cv_auc_acc=[]
+    
+    
     cv_geoacc_def = []
     cv_geoacc_auc = []
     cv_geoacc_acc = []
@@ -193,6 +202,29 @@ def oncefit(clf, xlsx, n_fold,epochs=1000):
             print(n_iter,conma_temp,"\n","acc:",accuracy,"auc:",auc) # 이것도 나중에 지우기
             ## 이 지점에서 Default fit 은 훈련이 끝
             
+            
+            
+            ## 여기서부터는 defaultfit에다가 임계점만 부여
+            proba1 = clf.decision_function(X_train)
+            Threshold = Find_Optimal_Cutoff(y_train, proba1)
+            pred = clf.predict(X_test,Threshold)
+            mat=confusion_matrix(y_test,pred)
+            conma_temp = makeconma(conma,mat) # 이걸로 위에줄삭제
+            
+            # 평가지표 생성
+            accuracy = np.round(accuracy_score(y_test,pred), 4)
+            auc=roc_auc_score(y_test, clf.predict_proba(X_test)[:,1])
+            geoaccvalue = geoacc(conma_temp)
+            
+            # 평가지표담기
+            cv_acc_defp.append(accuracy)
+            cv_auc_defp.append(auc)
+            cv_geoacc_defp.append(geoaccvalue)
+            conmaD=pd.concat([conmaD,conma_temp],axis=1)
+
+           
+            ## 임계점 추가한 디폴트핏 훈련 종료
+            
 
             # 여기서 부터 Adaboost 훈련
             clf.fit2(X_train, y_train)
@@ -211,9 +243,8 @@ def oncefit(clf, xlsx, n_fold,epochs=1000):
             cv_auc_auc.append(auc)
             cv_geoacc_auc.append(geoaccvalue)
             conmaB=pd.concat([conmaB,conma_temp],axis=1)
+
             
-            print("\n")
-            print(n_iter,conma_temp,"\n","acc:",accuracy,"auc:",auc)
             # 이 지점에서 Adaboost 훈련이 끝
             
             
@@ -250,7 +281,10 @@ def oncefit(clf, xlsx, n_fold,epochs=1000):
     # Default fit 부분 
     resultdef = ToExcel(cv_acc_def,cv_auc_def,cv_geoacc_def,conmaA,colname_first,colname_second) 
     resultdef.to_excel('Result/defalutfit'+str(len(xlsx)) + '.xlsx')
-
+    
+    resultdef = ToExcel(cv_acc_defp,cv_auc_defp,cv_geoacc_defp,conmaD,colname_first,colname_second) 
+    resultdef.to_excel('Result/defalutfiThreshold'+str(len(xlsx)) + '.xlsx')
+    
     
     # AUC fit 부분 
     resultdef = ToExcel(cv_acc_auc,cv_auc_auc,cv_geoacc_auc,conmaB,colname_first,colname_second) 
